@@ -1,0 +1,97 @@
+<html lang="en">
+    <head>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>ShopRight - Explore</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body class="shop-page">
+
+    <header class="navbar">
+        <div class="logo">ShopRight</div>
+        <div class="search-bar">
+        <input type="text" placeholder="Search for clothes..." />
+        <button>Search</button>
+        </div>
+        <div class="nav-icons">
+        <button>❤️</button>
+        <button>🛒</button>
+        <button>📸</button>
+        <button>👤</button>
+        <button>🚪</button>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <aside class="filter-panel">
+        <h3>Filters</h3>
+        <label><input type="checkbox" /> Men</label>
+        <label><input type="checkbox" /> Women</label>
+        <label><input type="checkbox" /> Kids</label>
+        <hr />
+        <h4>Price Range</h4>
+        <input type="range" min="0" max="5000" />
+        <hr />
+        <h4>Emotions</h4>
+        <ul>
+            <li>😊 Happy</li>
+            <li>😢 Sad</li>
+            <li>😠 Angry</li>
+            <li>🤢 Disgust</li>
+            <li>😐 Neutral</li>
+        </ul>
+        <hr />
+        <button class="scan-btn">📸 Scan Emotion</button>
+        </aside>
+
+        <section class="product-section">
+        <h2>Recommended For You</h2>
+        <div class="product-grid" id="product-grid"></div>
+        </section>
+    </main>
+    </body>
+    <script>
+
+        let product_grid = document.getElementById('product-grid');
+        const SUPABASE_URL = "https://mcjrdxfmuvoqriuofmxt.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1janJkeGZtdXZvcXJpdW9mbXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MDM5MzUsImV4cCI6MjA3NTE3OTkzNX0._PyztILx33tDKS_iLZ2VS1HDgYR-VWwixSDXo3ItMYM";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let products = [];
+
+        async function loadProducts() {
+            const { data, error } = await supabaseClient
+            .from('products')
+            .select('*');
+            products.push(...data);
+        }
+
+        function addProducts() {
+            let html = '';
+            products.forEach(i => {
+                const data = i;
+                const name = data.name;
+                const url = data.image_url;
+                const price = data.price;
+                const desc = data.description;
+                const emo_tag = data.emotion_tag;
+                const rating = data.rating;
+                <!-- console.log(name, url, price, desc, emo_tag, rating); -->
+                const div_card = `<div class="product-card">
+                    <img src="${url}" alt="${name}"/>
+                    <h3> ${name} </h3>
+                    <p> ${price} </p>
+                    <button id="${name}">Add to Cart</button>
+                </div>`;
+                html += div_card;
+            })
+            product_grid.innerHTML = html;
+        }
+
+        (async function Initial() {
+            await loadProducts();
+            addProducts();
+        })();
+        
+    </script>
+</html>

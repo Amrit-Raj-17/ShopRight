@@ -1,0 +1,186 @@
+    /* 🌐 Universal Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+    /* 🏠 Homepage Styling */
+.home-page {
+    background: url('https://images.unsplash.com/photo-1520975916090-3105956dac38?auto=format&fit=crop&w=1500&q=80') no-repeat center center/cover;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    position: relative;
+}
+
+.overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+.home-container {
+    text-align: center;
+    z-index: 10;
+}
+
+.home-container h1 {
+    font-size: 3rem;
+    color: #ffcc70;
+}
+
+.home-container span {
+    color: #ff7e5f;
+}
+
+.button-group {
+    margin-top: 30px;
+}
+
+.btn {
+    text-decoration: none;
+    background: #ff7e5f;
+    color: #fff;
+    padding: 12px 25px;
+    border-radius: 30px;
+    margin: 0 10px;
+    transition: background 0.3s;
+}
+
+.btn:hover {
+    background: #feb47b;
+}
+
+    /* 🛒 Shop Page Layout */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background: #ff7e5f;
+    color: white;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.search-bar {
+    display: flex;
+    gap: 10px;
+}
+
+.search-bar input {
+    padding: 8px;
+    border-radius: 5px;
+    border: none;
+    width: 250px;
+}
+
+.search-bar button {
+    background: #fff;
+    color: #ff7e5f;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.nav-icons button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.3rem;
+    margin: 0 8px;
+    cursor: pointer;
+}
+
+.main-content {
+    display: flex;
+    min-height: 90vh;
+}
+
+    /* 🧭 Filter Panel */
+.filter-panel {
+    width: 250px;
+    background: #f5f5f5;
+    padding: 20px;
+    border-right: 1px solid #ddd;
+}
+
+.filter-panel h3, .filter-panel h4 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.filter-panel label {
+    display: block;
+    margin: 5px 0;
+}
+
+.filter-panel ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.scan-btn {
+    background: #ff7e5f;
+    color: white;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+    /* 👕 Product Section */
+.product-section {
+    flex-grow: 1;
+    padding: 20px 40px;
+    background: #fff;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.product-card {
+    width: 200px;
+    background: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    text-align: center;
+    padding: 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card img {
+    width: 100px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.product-card button {
+    background: #ff7e5f;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    margin-top: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
