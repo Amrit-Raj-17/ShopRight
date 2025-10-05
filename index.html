@@ -25,39 +25,70 @@
 
     <main class="main-content">
         <aside class="filter-panel">
-        <h3>Filters</h3>
-        <label><input type="checkbox" /> Men</label>
-        <label><input type="checkbox" /> Women</label>
-        <label><input type="checkbox" /> Kids</label>
-        <hr />
-        <h4>Price Range</h4>
-        <input type="range" min="0" max="5000" />
-        <hr />
-        <h4>Emotions</h4>
-        <ul>
-            <li>😊 Happy</li>
-            <li>😢 Sad</li>
-            <li>😠 Angry</li>
-            <li>🤢 Disgust</li>
-            <li>😐 Neutral</li>
-        </ul>
-        <hr />
-        <button class="scan-btn">📸 Scan Emotion</button>
+            <h3>Filters</h3>
+            <div id="category">
+                <label><input type="checkbox" value="men" /> Men </label>
+                <label><input type="checkbox" value="women" /> Women </label>
+                <label><input type="checkbox" value="kids" /> Kids </label>
+            </div>
+            <hr />
+            <h4>Price Range</h4>
+            <input type="range" min="0" max="5000" />
+            <hr />
+            <h4>Emotions</h4>
+            <div id="emotion">
+                <label><input type="checkbox" value="neutral" />😐 Neutral</label>
+                <label><input type="checkbox" value="happy" />😊 Happy</label>
+                <label><input type="checkbox" value="sad" />😢 Sad</label>
+                <label><input type="checkbox" value="angry" />😠 Angry</label>
+                <label><input type="checkbox" value="fear" />😨 Fear</label>
+                <label><input type="checkbox" value="disgust" />🤢 Disgust</label>
+                <label><input type="checkbox" value="surprised" />😮 Surprised</label>
+            </div>
         </aside>
 
         <section class="product-section">
-        <h2>Recommended For You</h2>
+        <h2 id="heading"></h2>
         <div class="product-grid" id="product-grid"></div>
         </section>
     </main>
     </body>
     <script>
 
+        let heading = document.getElementById('heading');
         let product_grid = document.getElementById('product-grid');
         const SUPABASE_URL = "https://mcjrdxfmuvoqriuofmxt.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1janJkeGZtdXZvcXJpdW9mbXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MDM5MzUsImV4cCI6MjA3NTE3OTkzNX0._PyztILx33tDKS_iLZ2VS1HDgYR-VWwixSDXo3ItMYM";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let products = [];
+        let selectedCategories = [];
+        let selectedEmotions = [];
+        let selected_category = document.querySelectorAll('#category input[type="checkbox"]');
+        let selected_emotion = document.querySelectorAll('#emotion input[type="checkbox"]');
+        selected_category.forEach(i => {
+            i.addEventListener('change', (e) => {
+                const val = e.target.value;
+                if(selectedCategories.includes(val)) {
+                    selectedCategories = selectedCategories.filter(x => x != val);
+                }
+                else {
+                    selectedCategories.push(val);
+                }
+                addProducts();
+            }) 
+        })
+        selected_emotion.forEach(i => {
+            i.addEventListener('change', (e) => {
+                const val = e.target.value;
+                if(selectedEmotions.includes(val)) {
+                    selectedEmotions = selectedEmotions.filter(x => x != val);
+                }
+                else {
+                    selectedEmotions.push(val);
+                }
+                addProducts();
+            }) 
+        })
 
         async function loadProducts() {
             const { data, error } = await supabaseClient
@@ -68,6 +99,12 @@
 
         function addProducts() {
             let html = '';
+            if(selectedCategories.length === 0 && selectedEmotions.length === 0) {
+                heading.innerHTML = 'Recommended For You';
+            }
+            else {
+                heading.innerHTML = 'Filtered Products';
+            }
             products.forEach(i => {
                 const data = i;
                 const name = data.name;
@@ -76,14 +113,18 @@
                 const desc = data.description;
                 const emo_tag = data.emotion_tag;
                 const rating = data.rating;
-                <!-- console.log(name, url, price, desc, emo_tag, rating); -->
-                const div_card = `<div class="product-card">
-                    <img src="${url}" alt="${name}"/>
-                    <h3> ${name} </h3>
-                    <p> ${price} </p>
-                    <button id="${name}">Add to Cart</button>
-                </div>`;
-                html += div_card;
+                const category = data.category;
+                const case1 = selectedCategories.length === 0 || selectedCategories.includes(category);
+                const case2 = selectedEmotions.length === 0 || selectedEmotions.includes(emo_tag);
+                if(case1 && case2) {
+                    const div_card = `<div class="product-card">
+                        <img src="${url}" alt="${name}"/>
+                        <h3> ${name} </h3>
+                        <p> ${price} </p>
+                        <button id="${name}">Add to Cart</button>
+                    </div>`;
+                    html += div_card;
+                }
             })
             product_grid.innerHTML = html;
         }
@@ -95,4 +136,3 @@
         
     </script>
 </html>
-
