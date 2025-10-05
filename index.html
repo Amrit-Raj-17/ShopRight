@@ -31,10 +31,16 @@
                 <label><input type="checkbox" value="women" /> Women </label>
                 <label><input type="checkbox" value="kids" /> Kids </label>
             </div>
+            <br>
             <hr />
-            <h4>Price Range</h4>
-            <input type="range" min="0" max="5000" />
+            <br>
+            <h4>Price Range: ₹<span id="minValue">300</span> - ₹<span id="maxValue">6000</span></h4>
+            <div class="slider-container">
+                <input type="range" id="minSlider" min="300" max="6000" step="100" value="300">
+                <input type="range" id="maxSlider" min="300" max="6000" step="100" value="6000">
+            </div>
             <hr />
+            <br>
             <h4>Emotions</h4>
             <div id="emotion">
                 <label><input type="checkbox" value="neutral" />😐 Neutral</label>
@@ -45,6 +51,7 @@
                 <label><input type="checkbox" value="disgust" />🤢 Disgust</label>
                 <label><input type="checkbox" value="surprised" />😮 Surprised</label>
             </div>
+            <div class="clear_filter" id="clear_filter">🗑️ Clear all filters</div>
         </aside>
 
         <section class="product-section">
@@ -55,16 +62,24 @@
     </body>
     <script>
 
-        let heading = document.getElementById('heading');
-        let product_grid = document.getElementById('product-grid');
+        const heading = document.getElementById('heading');
+        const max_slider = document.getElementById('maxSlider');
+        const min_slider = document.getElementById('minSlider');
+        const maxValue = document.getElementById('maxValue');
+        const minValue = document.getElementById('minValue');
+        const clear_filter = document.getElementById('clear_filter');
+        const product_grid = document.getElementById('product-grid');
+        const selected_category = document.querySelectorAll('#category input[type="checkbox"]');
+        const selected_emotion = document.querySelectorAll('#emotion input[type="checkbox"]');
         const SUPABASE_URL = "https://mcjrdxfmuvoqriuofmxt.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1janJkeGZtdXZvcXJpdW9mbXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MDM5MzUsImV4cCI6MjA3NTE3OTkzNX0._PyztILx33tDKS_iLZ2VS1HDgYR-VWwixSDXo3ItMYM";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let max_price = parseInt(max_slider.value);
+        let min_price = parseInt(min_slider.value);
         let products = [];
         let selectedCategories = [];
         let selectedEmotions = [];
-        let selected_category = document.querySelectorAll('#category input[type="checkbox"]');
-        let selected_emotion = document.querySelectorAll('#emotion input[type="checkbox"]');
+
         selected_category.forEach(i => {
             i.addEventListener('change', (e) => {
                 const val = e.target.value;
@@ -77,6 +92,7 @@
                 addProducts();
             }) 
         })
+
         selected_emotion.forEach(i => {
             i.addEventListener('change', (e) => {
                 const val = e.target.value;
@@ -90,6 +106,49 @@
             }) 
         })
 
+        clear_filter.addEventListener('click', (e) => {
+            selected_category.forEach(i => {
+                i.checked = false;
+            })
+            selected_emotion.forEach(i => {
+                i.checked = false;
+            })
+            selectedCategories = [];
+            selectedEmotions = [];
+            max_price = 6000;
+            min_price = 300;
+            max_slider.value = max_price;
+            min_slider.value = min_price;
+            maxValue.innerHTML = max_price;
+            minValue.innerHTML = min_price;
+            updateSliderFill();
+            addProducts();
+        })
+
+        max_slider.addEventListener('input', (e) => {
+            let val = parseInt(e.target.value);
+            if (val < min_price + 250) {
+                val = min_price + 250;
+                max_slider.value = val;
+            }
+            max_price = val;
+            maxValue.innerHTML = val;
+            updateSliderFill();
+            addProducts();
+        })
+
+        min_slider.addEventListener('input', (e) => {
+            let val = parseInt(e.target.value);
+            if (val > max_price - 250) {
+                val = max_price - 250;
+                min_slider.value = val;
+            }
+            min_price = val;
+            minValue.innerHTML = val;
+            updateSliderFill();
+            addProducts();
+        })
+
         async function loadProducts() {
             const { data, error } = await supabaseClient
             .from('products')
@@ -99,7 +158,7 @@
 
         function addProducts() {
             let html = '';
-            if(selectedCategories.length === 0 && selectedEmotions.length === 0) {
+            if(selectedCategories.length == 0 && selectedEmotions.length == 0 && max_price == 6000 && min_price == 300) {
                 heading.innerHTML = 'Recommended For You';
             }
             else {
@@ -116,20 +175,40 @@
                 const category = data.category;
                 const case1 = selectedCategories.length === 0 || selectedCategories.includes(category);
                 const case2 = selectedEmotions.length === 0 || selectedEmotions.includes(emo_tag);
-                if(case1 && case2) {
+                const case3 = price <= max_price && price >= min_price;
+                if(case1 && case2 && case3) {
                     const div_card = `<div class="product-card">
                         <img src="${url}" alt="${name}"/>
                         <h3> ${name} </h3>
-                        <p> ${price} </p>
+                        <p> ₹${price} </p>
                         <button id="${name}">Add to Cart</button>
                     </div>`;
                     html += div_card;
                 }
             })
+            if(html == '') html += `<div class="product-card">
+                Sorry ☹
+                <br>
+                No products found!!!
+                </div>`;
             product_grid.innerHTML = html;
         }
 
+        
+        function updateSliderFill() {
+            const percent1 = ((min_price - 300) / (6000 - 300)) * 100;
+            const percent2 = ((max_price - 300) / (6000 - 300)) * 100;
+            const gradient = `linear-gradient(to right,
+                #f8cbc1 ${percent1 + 1}%,
+                #ff7e5f ${percent1 - 1}%,
+                #ff7e5f ${percent2 - 1}%,
+                #f8cbc1 ${percent2 + 1}%)`;
+            min_slider.style.background = gradient;
+            max_slider.style.background = gradient;
+        }
+        
         (async function Initial() {
+            updateSliderFill();
             await loadProducts();
             addProducts();
         })();
