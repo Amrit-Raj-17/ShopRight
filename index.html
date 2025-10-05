@@ -1,6 +1,7 @@
 <html lang="en">
     <head>
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>ShopRight - Explore</title>
@@ -17,7 +18,7 @@
         <div class="nav-icons">
         <button>❤️</button>
         <button>🛒</button>
-        <button>📸</button>
+        <button id="scan_emotion">📸</button>
         <button>👤</button>
         <button>🚪</button>
         </div>
@@ -42,7 +43,7 @@
             <hr />
             <br>
             <h4>Emotions</h4>
-            <div id="emotion">
+            <div id="emotion_filter">
                 <label><input type="checkbox" value="neutral" />😐 Neutral</label>
                 <label><input type="checkbox" value="happy" />😊 Happy</label>
                 <label><input type="checkbox" value="sad" />😢 Sad</label>
@@ -54,23 +55,36 @@
             <div class="clear_filter" id="clear_filter">🗑️ Clear all filters</div>
         </aside>
 
+        <div id="popup" class="popup">
+        <div class="popup-content">
+            <button id="close_popup">✖</button>
+            <h3>Detecting your Emotion...</h3>
+            <video id="video" width="320" height="240" autoplay muted></video>
+            <h4>Emotion: <span id="emotion">None</span></h4>
+        </div>
+        </div>
+
         <section class="product-section">
-        <h2 id="heading"></h2>
-        <div class="product-grid" id="product-grid"></div>
+            <h2 id="heading"></h2>
+            <div class="product-grid" id="product-grid"></div>
         </section>
     </main>
     </body>
     <script>
 
+        const video = document.getElementById('video');
+        const popup = document.getElementById('popup');
+        const close_popup = document.getElementById('close_popup');
         const heading = document.getElementById('heading');
-        const max_slider = document.getElementById('maxSlider');
-        const min_slider = document.getElementById('minSlider');
         const maxValue = document.getElementById('maxValue');
         const minValue = document.getElementById('minValue');
+        const max_slider = document.getElementById('maxSlider');
+        const min_slider = document.getElementById('minSlider');
+        const scan_emotion = document.getElementById('scan_emotion');
         const clear_filter = document.getElementById('clear_filter');
         const product_grid = document.getElementById('product-grid');
         const selected_category = document.querySelectorAll('#category input[type="checkbox"]');
-        const selected_emotion = document.querySelectorAll('#emotion input[type="checkbox"]');
+        const selected_emotion = document.querySelectorAll('#emotion_filter input[type="checkbox"]');
         const SUPABASE_URL = "https://mcjrdxfmuvoqriuofmxt.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1janJkeGZtdXZvcXJpdW9mbXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MDM5MzUsImV4cCI6MjA3NTE3OTkzNX0._PyztILx33tDKS_iLZ2VS1HDgYR-VWwixSDXo3ItMYM";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -79,6 +93,18 @@
         let products = [];
         let selectedCategories = [];
         let selectedEmotions = [];
+        let currentEmotion = '';
+        let stream;
+
+        scan_emotion.addEventListener('click', async () => {
+            popup.style.display = 'flex';
+            await startEmotionDetection();
+        });
+
+        close_popup.addEventListener('click', () => {
+            popup.style.display = 'none';
+            stopVideo();
+        });
 
         selected_category.forEach(i => {
             i.addEventListener('change', (e) => {
@@ -149,6 +175,74 @@
             addProducts();
         })
 
+        async function startEmotionDetection() {
+            await startVideo();
+            await loadModels();
+            startDetection();
+        }
+
+        async function loadModels() {
+            await Promise.all([
+                faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models'),
+                faceapi.nets.faceExpressionNet.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models')
+            ]);
+        }
+
+        async function startDetection() {
+            video.addEventListener('play', () => {
+                const canvas = faceapi.createCanvasFromMedia(video);
+                document.querySelector('.popup-content').appendChild(canvas);
+                const displaySize = { width: video.width, height: video.height };
+                faceapi.matchDimensions(canvas, displaySize);
+
+                const detectInterval = setInterval(async () => {
+                    if (popup.style.display === 'none') {
+                        clearInterval(detectInterval);
+                        return;
+                    }
+                    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
+                    const resized = faceapi.resizeResults(detections, displaySize);
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    faceapi.draw.drawDetections(canvas, resized);
+
+                    if (detections[0]) {
+                        const expressions = detections[0].expressions;
+                        const maxEmotion = Object.keys(expressions).reduce((a,b) => expressions[a] > expressions[b] ? a : b);
+                        document.getElementById('emotion').textContent = maxEmotion;
+                        currentEmotion = maxEmotion;
+                        console.log(maxEmotion);
+                    }
+                }, 300);
+            });
+        }
+
+        async function startVideo() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Error accessing webcam: ", err);
+            }
+        }
+
+        function stopVideo() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            const canvas = document.querySelector('canvas');
+            if (canvas) canvas.remove();
+            if(currentEmotion != '') {
+                if(!selectedEmotions.includes(currentEmotion)) {
+                    selectedEmotions.push(currentEmotion);
+                    selected_emotion.forEach(i => {
+                        if(currentEmotion === i.value) i.checked = true;
+                    })
+                    addProducts();
+                }
+            }
+        }
+
         async function loadProducts() {
             const { data, error } = await supabaseClient
             .from('products')
@@ -193,8 +287,7 @@
                 </div>`;
             product_grid.innerHTML = html;
         }
-
-        
+     
         function updateSliderFill() {
             const percent1 = ((min_price - 300) / (6000 - 300)) * 100;
             const percent2 = ((max_price - 300) / (6000 - 300)) * 100;
@@ -208,8 +301,8 @@
         }
         
         (async function Initial() {
-            updateSliderFill();
             await loadProducts();
+            updateSliderFill();
             addProducts();
         })();
         
