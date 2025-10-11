@@ -1,310 +1,93 @@
 <html lang="en">
     <head>
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>ShopRight - Explore</title>
+        <title>ShopRight - Welcome</title>
         <link rel="stylesheet" href="style.css" />
     </head>
-    <body class="shop-page">
 
-    <header class="navbar">
-        <div class="logo">ShopRight</div>
-        <div class="search-bar">
-        <input type="text" placeholder="Search for clothes..." />
-        <button>Search</button>
-        </div>
-        <div class="nav-icons">
-        <button>❤️</button>
-        <button>🛒</button>
-        <button id="scan_emotion">📸</button>
-        <button>👤</button>
-        <button>🚪</button>
-        </div>
-    </header>
+    <body class="login-page">
+        <div class="overlay"></div>
+        <div class="login-container">
+            <h1>Welcome to <span>ShopRight</span></h1>
+            <p>AI-driven Emotion-Based Fashion Shopping</p>
 
-    <main class="main-content">
-        <aside class="filter-panel">
-            <h3>Filters</h3>
-            <div id="category">
-                <label><input type="checkbox" value="men" /> Men </label>
-                <label><input type="checkbox" value="women" /> Women </label>
-                <label><input type="checkbox" value="kids" /> Kids </label>
+            <div class="button-group">
+                <button class="btn login-btn" onclick="showForm('login')">Login</button>
+                <button class="btn register-btn" onclick="showForm('register')">Register</button>
             </div>
-            <br>
-            <hr />
-            <br>
-            <h4>Price Range: ₹<span id="minValue">300</span> - ₹<span id="maxValue">6000</span></h4>
-            <div class="slider-container">
-                <input type="range" id="minSlider" min="300" max="6000" step="100" value="300">
-                <input type="range" id="maxSlider" min="300" max="6000" step="100" value="6000">
-            </div>
-            <hr />
-            <br>
-            <h4>Emotions</h4>
-            <div id="emotion_filter">
-                <label><input type="checkbox" value="neutral" />😐 Neutral</label>
-                <label><input type="checkbox" value="happy" />😊 Happy</label>
-                <label><input type="checkbox" value="sad" />😢 Sad</label>
-                <label><input type="checkbox" value="angry" />😠 Angry</label>
-                <label><input type="checkbox" value="fearful" />😨 Fear</label>
-                <label><input type="checkbox" value="disgust" />🤢 Disgust</label>
-                <label><input type="checkbox" value="surprised" />😮 Surprised</label>
-            </div>
-            <div class="clear_filter" id="clear_filter">🗑️ Clear all filters</div>
-        </aside>
 
-        <div id="popup" class="popup">
-        <div class="popup-content">
-            <button id="close_popup">✖</button>
-            <h3>Detecting your Emotion...</h3>
-            <video id="video" width="320" height="240" autoplay muted></video>
-            <h4>Emotion: <span id="emotion">None</span></h4>
-        </div>
-        </div>
+            <div id="message" style="margin-top:20px; color:#ffcc70; font-weight:bold;"></div>
 
-        <section class="product-section">
-            <h2 id="heading"></h2>
-            <div class="product-grid" id="product-grid"></div>
-        </section>
-    </main>
+            <form id="loginForm" style="display:none; margin-top:30px;" onsubmit="loginUser(event)">
+                <h3>Login</h3>
+                <input type="email" id="login_email" placeholder="Email" required><br><br>
+                <input type="password" id="login_password" placeholder="Password" required><br><br>
+                <button type="submit" class="btn">Login</button>
+            </form>
+
+            <form id="registerForm" style="display:none; margin-top:30px;" onsubmit="registerUser(event)">
+            <h3>Register</h3>
+                <input type="text" id="reg_name" placeholder="Full Name" required><br><br>
+                <input type="email" id="reg_email" placeholder="Email" required><br><br>
+                <input type="password" id="reg_password" placeholder="Password" required><br><br>
+                <button type="submit" class="btn">Register</button>
+            </form>
+        </div>
     </body>
     <script>
 
-        const video = document.getElementById('video');
-        const popup = document.getElementById('popup');
-        const close_popup = document.getElementById('close_popup');
-        const heading = document.getElementById('heading');
-        const maxValue = document.getElementById('maxValue');
-        const minValue = document.getElementById('minValue');
-        const max_slider = document.getElementById('maxSlider');
-        const min_slider = document.getElementById('minSlider');
-        const scan_emotion = document.getElementById('scan_emotion');
-        const clear_filter = document.getElementById('clear_filter');
-        const product_grid = document.getElementById('product-grid');
-        const selected_category = document.querySelectorAll('#category input[type="checkbox"]');
-        const selected_emotion = document.querySelectorAll('#emotion_filter input[type="checkbox"]');
         const SUPABASE_URL = "https://mcjrdxfmuvoqriuofmxt.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1janJkeGZtdXZvcXJpdW9mbXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MDM5MzUsImV4cCI6MjA3NTE3OTkzNX0._PyztILx33tDKS_iLZ2VS1HDgYR-VWwixSDXo3ItMYM";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        let max_price = parseInt(max_slider.value);
-        let min_price = parseInt(min_slider.value);
-        let products = [];
-        let selectedCategories = [];
-        let selectedEmotions = [];
-        let currentEmotion = '';
-        let stream;
 
-        scan_emotion.addEventListener('click', async () => {
-            popup.style.display = 'flex';
-            await startEmotionDetection();
-        });
-
-        close_popup.addEventListener('click', () => {
-            popup.style.display = 'none';
-            stopVideo();
-        });
-
-        selected_category.forEach(i => {
-            i.addEventListener('change', (e) => {
-                const val = e.target.value;
-                if(selectedCategories.includes(val)) {
-                    selectedCategories = selectedCategories.filter(x => x != val);
-                }
-                else {
-                    selectedCategories.push(val);
-                }
-                addProducts();
-            }) 
-        })
-
-        selected_emotion.forEach(i => {
-            i.addEventListener('change', (e) => {
-                const val = e.target.value;
-                if(selectedEmotions.includes(val)) {
-                    selectedEmotions = selectedEmotions.filter(x => x != val);
-                }
-                else {
-                    selectedEmotions.push(val);
-                }
-                addProducts();
-            }) 
-        })
-
-        clear_filter.addEventListener('click', (e) => {
-            selected_category.forEach(i => {
-                i.checked = false;
-            })
-            selected_emotion.forEach(i => {
-                i.checked = false;
-            })
-            selectedCategories = [];
-            selectedEmotions = [];
-            max_price = 6000;
-            min_price = 300;
-            max_slider.value = max_price;
-            min_slider.value = min_price;
-            maxValue.innerHTML = max_price;
-            minValue.innerHTML = min_price;
-            updateSliderFill();
-            addProducts();
-        })
-
-        max_slider.addEventListener('input', (e) => {
-            let val = parseInt(e.target.value);
-            if (val < min_price + 250) {
-                val = min_price + 250;
-                max_slider.value = val;
-            }
-            max_price = val;
-            maxValue.innerHTML = val;
-            updateSliderFill();
-            addProducts();
-        })
-
-        min_slider.addEventListener('input', (e) => {
-            let val = parseInt(e.target.value);
-            if (val > max_price - 250) {
-                val = max_price - 250;
-                min_slider.value = val;
-            }
-            min_price = val;
-            minValue.innerHTML = val;
-            updateSliderFill();
-            addProducts();
-        })
-
-        async function startEmotionDetection() {
-            await startVideo();
-            await loadModels();
-            startDetection();
+        function showForm(type) {
+            document.getElementById("loginForm").style.display = type === 'login' ? 'block' : 'none';
+            document.getElementById("registerForm").style.display = type === 'register' ? 'block' : 'none';
+            document.getElementById("message").textContent = "";
         }
 
-        async function loadModels() {
-            await Promise.all([
-                faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models'),
-                faceapi.nets.faceExpressionNet.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models')
-            ]);
-        }
+        async function registerUser(event) {
+            event.preventDefault();
+            const name = document.getElementById("reg_name").value;
+            const email = document.getElementById("reg_email").value;
+            const password = document.getElementById("reg_password").value;
 
-        async function startDetection() {
-            video.addEventListener('play', () => {
-                const canvas = faceapi.createCanvasFromMedia(video);
-                document.querySelector('.popup-content').appendChild(canvas);
-                const displaySize = { width: video.width, height: video.height };
-                faceapi.matchDimensions(canvas, displaySize);
-
-                const detectInterval = setInterval(async () => {
-                    if (popup.style.display === 'none') {
-                        clearInterval(detectInterval);
-                        return;
-                    }
-                    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
-                    const resized = faceapi.resizeResults(detections, displaySize);
-                    const ctx = canvas.getContext('2d');
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    faceapi.draw.drawDetections(canvas, resized);
-
-                    if (detections[0]) {
-                        const expressions = detections[0].expressions;
-                        const maxEmotion = Object.keys(expressions).reduce((a,b) => expressions[a] > expressions[b] ? a : b);
-                        document.getElementById('emotion').textContent = maxEmotion;
-                        currentEmotion = maxEmotion;
-                        console.log(maxEmotion);
-                    }
-                }, 300);
+            const { data, error } = await supabaseClient.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: { name: name }
+                }
             });
-        }
 
-        async function startVideo() {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: {} });
-                video.srcObject = stream;
-            } catch (err) {
-                console.error("Error accessing webcam: ", err);
-            }
-        }
-
-        function stopVideo() {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-            const canvas = document.querySelector('canvas');
-            if (canvas) canvas.remove();
-            if(currentEmotion != '') {
-                if(!selectedEmotions.includes(currentEmotion)) {
-                    selectedEmotions.push(currentEmotion);
-                    selected_emotion.forEach(i => {
-                        if(currentEmotion === i.value) i.checked = true;
-                    })
-                    addProducts();
-                }
+            if (error) {
+                document.getElementById("message").textContent = "❌ " + error.message;
+            } else {
+                document.getElementById("message").textContent = "✅ Registration successful! Please login.";
+                setTimeout(() => {
+                    document.getElementById("registerForm").reset();
+                    showForm('login');
+                }, 1000);
             }
         }
 
-        async function loadProducts() {
-            const { data, error } = await supabaseClient
-            .from('products')
-            .select('*');
-            products.push(...data);
-        }
+        async function loginUser(event) {
+            event.preventDefault();
+            const email = document.getElementById("login_email").value;
+            const password = document.getElementById("login_password").value;
 
-        function addProducts() {
-            let html = '';
-            if(selectedCategories.length == 0 && selectedEmotions.length == 0 && max_price == 6000 && min_price == 300) {
-                heading.innerHTML = 'Recommended For You';
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+            if (error || !data) {
+                document.getElementById("message").textContent = "❌ Invalid email or password.";
+            } else {
+                document.getElementById("message").textContent = "✅ Login successful! Redirecting...";
+                setTimeout(() => {
+                    window.location.href = "home.html";
+                }, 1000);
             }
-            else {
-                heading.innerHTML = 'Filtered Products';
-            }
-            products.forEach(i => {
-                const data = i;
-                const name = data.name;
-                const url = data.image_url;
-                const price = data.price;
-                const desc = data.description;
-                const emo_tag = data.emotion_tag;
-                const rating = data.rating;
-                const category = data.category;
-                const case1 = selectedCategories.length === 0 || selectedCategories.includes(category);
-                const case2 = selectedEmotions.length === 0 || selectedEmotions.includes(emo_tag);
-                const case3 = price <= max_price && price >= min_price;
-                if(case1 && case2 && case3) {
-                    const div_card = `<div class="product-card">
-                        <img src="${url}" alt="${name}"/>
-                        <h3> ${name} </h3>
-                        <p> ₹${price} </p>
-                        <button id="${name}">Add to Cart</button>
-                    </div>`;
-                    html += div_card;
-                }
-            })
-            if(html == '') html += `<div class="product-card">
-                Sorry ☹
-                <br>
-                No products found!!!
-                </div>`;
-            product_grid.innerHTML = html;
         }
-     
-        function updateSliderFill() {
-            const percent1 = ((min_price - 300) / (6000 - 300)) * 100;
-            const percent2 = ((max_price - 300) / (6000 - 300)) * 100;
-            const gradient = `linear-gradient(to right,
-                #f8cbc1 ${percent1 + 1}%,
-                #ff7e5f ${percent1 - 1}%,
-                #ff7e5f ${percent2 - 1}%,
-                #f8cbc1 ${percent2 + 1}%)`;
-            min_slider.style.background = gradient;
-            max_slider.style.background = gradient;
-        }
-        
-        (async function Initial() {
-            await loadProducts();
-            updateSliderFill();
-            addProducts();
-        })();
-        
     </script>
 </html>
