@@ -88,8 +88,8 @@
         const product_grid = document.getElementById('product-grid');
         const selected_category = document.querySelectorAll('#category input[type="checkbox"]');
         const selected_emotion = document.querySelectorAll('#emotion_filter input[type="checkbox"]');
-        const SUPABASE_URL = "https://mcjrdxfmuvoqriuofmxt.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1janJkeGZtdXZvcXJpdW9mbXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MDM5MzUsImV4cCI6MjA3NTE3OTkzNX0._PyztILx33tDKS_iLZ2VS1HDgYR-VWwixSDXo3ItMYM";
+        const SUPABASE_URL = "https://sgcneioqoemxxfhxoxwe.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNnY25laW9xb2VteHhmaHhveHdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzA4NjgsImV4cCI6MjA4NzgwNjg2OH0.4-8odzXmhLy7Npce_TMC3pYiWHLXZMS8Tmm3o4wNZTI";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let max_price = parseInt(max_slider.value);
         let min_price = parseInt(min_slider.value);
@@ -330,4 +330,5 @@
         })();
         
     </script>
+
 </html>
